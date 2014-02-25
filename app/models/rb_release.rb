@@ -55,12 +55,9 @@ class ReleaseBurndown
             }
 
     # Calculate total, added and closed points
-    total = RbReleaseBurnchartDayCache.where("release_id = ? AND day IN (?)",release.id,@days)
-              .order(:day).group(:day).sum(:total_points)
-    added = RbReleaseBurnchartDayCache.where("release_id = ? AND day IN (?)",release.id,@days)
-              .order(:day).group(:day).sum(:added_points)
-    closed = RbReleaseBurnchartDayCache.where("release_id = ? AND day IN (?)",release.id,@days)
-               .order(:day).group(:day).sum(:closed_points)
+    total = RbReleaseBurnchartDayCache.where("release_id = ? AND day IN (?)",release.id,@days).order(:day).group(:day).sum(:total_points)
+    added = RbReleaseBurnchartDayCache.where("release_id = ? AND day IN (?)",release.id,@days).order(:day).group(:day).sum(:added_points)
+    closed = RbReleaseBurnchartDayCache.where("release_id = ? AND day IN (?)",release.id,@days).order(:day).group(:day).sum(:closed_points)
 
     # Series collected, now format data for jqplot
     # Slightly hacky formatting to get the correct view. Might change when this jqplot issue is 
