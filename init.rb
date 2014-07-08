@@ -52,7 +52,7 @@ Redmine::Plugin.register :redmine_backlogs do
   name 'Redmine Backlogs'
   author "friflaj,Mark Maglana,John Yani,mikoto20000,Frank Blendinger,Bo Hansen,stevel,Patrick Atamaniuk"
   description 'A plugin for agile teams'
-  version 'v1.0.5'
+  version 'v1.0.6'
 
   settings :default => {
                          :story_trackers            => nil,
@@ -123,7 +123,7 @@ Redmine::Plugin.register :redmine_backlogs do
     # :show_sprints and :list_sprints are implicit in :view_master_backlog permission
     permission :create_sprints,      { :rb_sprints => [:new, :create]  }
     permission :update_sprints,      {
-                                        :rb_sprints => [:edit, :update],
+                                        :rb_sprints => [:edit, :update, :close],
                                         :rb_wikis   => [:edit, :update]
                                       }
 

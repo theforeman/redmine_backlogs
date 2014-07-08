@@ -13,6 +13,21 @@ module BacklogsPlugin
         Rails.logger.error "#{ex.message} (#{ex.class}): " + ex.backtrace.join("\n")
       end
 
+      def helper_issues_show_detail_after_setting(context={ })
+      	begin
+          if context[:detail].prop_key == 'release_id'
+            r = RbRelease.find_by_id(context[:detail].value)
+            context[:detail].value = r.name unless r.nil? || r.name.nil?
+
+            r = RbRelease.find_by_id(context[:detail].old_value)
+            context[:detail].old_value = r.name unless r.nil? || r.name.nil?
+          end
+        rescue => e
+          exception(context, e)
+          return ''
+        end
+      end
+
       def view_issues_sidebar_planning_bottom(context={ })
         begin
           return '' if User.current.anonymous?
@@ -86,7 +101,7 @@ module BacklogsPlugin
 
             unless issue.release_id.nil?
               release = RbRelease.find(issue.release_id)
-              snippet += "<tr><th>#{l(:field_release)}</th><td>#{link_to release.name, :controller=>'rb_releases', :action=>'show', :release_id=>release}</td>"
+              snippet += "<tr><th>#{l(:field_release)}</th><td>#{link_to(release.name, url_for_prefix_in_hooks + url_for({:controller => 'rb_releases', :action => 'show', :release_id => release}))}</td>"
               relation_translate = l("label_release_relationship_#{RbStory.find(issue.id).release_relationship}")
               snippet += "<th>#{l(:field_release_relationship)}</th><td>#{relation_translate}</td></tr>"
             end
@@ -119,7 +134,11 @@ module BacklogsPlugin
           if issue.is_story?
             snippet += '<p>'
             #snippet += context[:form].label(:story_points)
-            snippet += context[:form].text_field(:story_points, :size => 3)
+            if Backlogs.setting[:story_points].blank?
+              snippet += context[:form].text_field(:story_points, :size => 3)
+            else
+              snippet += context[:form].select(:story_points, options_for_select(Backlogs.setting[:story_points].split(',').map(&:to_f), issue.story_points.try(:to_f).try(:to_s)), include_blank: true)
+            end
             snippet += '</p>'
 
             if issue.safe_attribute?('release_id') && issue.assignable_releases.any?
@@ -219,7 +238,7 @@ module BacklogsPlugin
           releases.each do |s|
               snippet += '<li>' +
                 context_menu_link(s.name,
-                                  {:controller => 'issues', :action => 'bulk_update', :ids => issues, :issue => {:release_id => s}, :back_url => context[:back]},
+                                  url_for_prefix_in_hooks + bulk_update_issues_path(:ids => issues, :issue => {:release_id => s}, :back_url => context[:back]),
                                   :method => :post,
                                   :selected => (issue && s == issue.release),
                                   :disabled => !context[:can][:update])+
@@ -227,7 +246,7 @@ module BacklogsPlugin
           end
           snippet += '<li>' +
                 context_menu_link(l(:label_none),
-                                  {:controller => 'issues', :action => 'bulk_update', :ids => issues, :issue => {:release_id => 'none'}, :back_url => context[:back]},
+                                  url_for_prefix_in_hooks + bulk_update_issues_path(:ids => issues, :issue => {:release_id => 'none'}, :back_url => context[:back]),
                                   :method => :post,
                                   :selected => (issue && issue.release.nil?),
                                   :disabled => !context[:can][:update])+
@@ -252,7 +271,7 @@ module BacklogsPlugin
 
           if User.current.allowed_to?(:edit_wiki_pages, project)
             snippet += '<span id="edit_wiki_page_action">'
-            snippet += link_to l(:button_edit_wiki), 
+            snippet += link_to l(:button_edit_wiki),
                       url_for_prefix_in_hooks + url_for({:controller => 'rb_wikis', :action => 'edit', :sprint_id => version.id }),
                       :class => 'icon icon-edit'
             snippet += '</span>'
