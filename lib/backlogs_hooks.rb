@@ -19,8 +19,8 @@ module BacklogsPlugin
             r = RbRelease.find_by_id(context[:detail].value) if is_int?(context[:detail].value)
             context[:detail].value = r.name unless r.nil? || r.name.nil?
 
-            r = RbRelease.find_by_id(context[:detail].old_value) if is_int?(context[:detail].old_value)
-            context[:detail].old_value = r.name unless r.nil? || r.name.nil?
+            old_r = RbRelease.find_by_id(context[:detail].old_value) if is_int?(context[:detail].old_value)
+            context[:detail].old_value = old_r.name unless old_r.nil? || old_r.name.nil?
           end
         rescue => e
           exception(context, e)
